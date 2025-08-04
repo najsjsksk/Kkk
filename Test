@@ -1,0 +1,36 @@
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local Analytics = game:GetService("RbxAnalyticsService")
+
+local player = Players.LocalPlayer
+local hwid = Analytics:GetClientId()
+
+local data = {
+    key = getgenv().Key or "Không có",
+    discordId = getgenv().ID or "Không có",
+    hwid = hwid,
+    playerName = player.Name,
+    userId = player.UserId
+}
+
+local jsonData = HttpService:JSONEncode(data)
+local httprequest = (syn and syn.request) or (http and http.request) or http_request or request
+
+local response = httprequest({
+    Url = "https://bot.duyvelbot.site/api/hwid-update",
+    Method = "POST",
+    Headers = { ["Content-Type"] = "application/json" },
+    Body = jsonData
+})
+
+-- Phản hồi từ server (tùy executor mới thấy output)
+if response and response.StatusCode == 200 then
+    local result = HttpService:JSONDecode(response.Body)
+    if result.success then
+        print("✅ Gửi HWID thành công:", result.message)
+    else
+        warn("❌ Gửi HWID thất bại:", result.message)
+    end
+else
+    warn("❌ Không thể kết nối đến server. Kiểm tra domain hoặc API.")
+end
