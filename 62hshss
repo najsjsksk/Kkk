@@ -1,19 +1,19 @@
--- // Tải thư viện Fluent
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
 
 -- // Tạo cửa sổ chính
-local Window = Fluent:CreateWindow({
-    Title = "Renx Hub | Key System",
-    SubTitle = "by _duyvel",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(500, 350),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.RightControl
+local Window = OrionLib:MakeWindow({
+    Name = "Renx Hub | Key System",
+    HidePremium = false,
+    SaveConfig = false,
+    IntroText = "by _duyvel"
 })
 
 -- // Tạo tab chính
-local Tab = Window:AddTab({ Title = "Key System", Icon = "key" })
+local Tab = Window:MakeTab({
+    Name = "Key System",
+    Icon = "rbxassetid://6031280882", -- icon chìa khoá
+    PremiumOnly = false
+})
 
 -- // Dịch vụ cần thiết
 local HttpService = game:GetService("HttpService")
@@ -26,62 +26,105 @@ local function getHWID()
     end)
     return success and result or "unknown"
 end
-local KEY_API = "https://duyvel.testhubgetkey.site/checkkey" -- THAY LINK NÀY BẰNG API CỦA BẠN
+
+-- // API & Key
+local KEY_API = "https://duyvel.testhubgetkey.site/checkkey"
 local userKey = ""
 
--- // Ô nhập Key
-Tab:AddInput("KeyInput", {
-    Title = "🔑 Nhập Key",
-    Placeholder = "Key",
-    Callback = function(value)
-        userKey = value
+-- // Nhập Key
+Tab:AddTextbox({
+    Name = "🔑 Nhập Key",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(Value)
+        userKey = Value
     end
 })
 
+-- // Label hiển thị kết quả
+local statusLabel = Tab:AddLabel("⏳ Chưa kiểm tra...")
 
--- // Nút CheckKey
+-- // Hàm gửi request (cho exploit)
+local function sendRequest(url, data)
+    local req = http_request or request or syn and syn.request
+    if not req then
+        return nil, "❌ Exploit của bạn không hỗ trợ http_request"
+    end
+
+    local response = req({
+        Url = url,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = data
+    })
+
+    return response, nil
+end
+
+-- // Nút kiểm tra key
 Tab:AddButton({
-    Title = "✅ Check Key",
-    Description = "Kiểm tra và gán key nếu hợp lệ.",
+    Name = "✅ Check Key",
     Callback = function()
         if userKey == "" then
-            ResultLabel:Set("❗ Vui lòng nhập key trước.")
+            statusLabel:Set("❗ Vui lòng nhập key trước.")
             return
         end
 
-        ResultLabel:Set("🔄 Đang kiểm tra...")
+        statusLabel:Set("🔄 Đang kiểm tra key...")
 
         local hwid = getHWID()
-        local payload = HttpService:JSONEncode({ key = userKey, hwid = hwid })
+        local payload = HttpService:JSONEncode({
+            key = userKey,
+            hwid = hwid
+        })
 
-        local success, response = pcall(function()
-            return HttpService:PostAsync(KEY_API, payload, Enum.HttpContentType.ApplicationJson)
+        local response, err = sendRequest(KEY_API, payload)
+
+        if not response then
+            statusLabel:Set(err or "❌ Không thể gửi request.")
+            return
+        end
+
+        if response.StatusCode == 200 then
+            local result
+            local ok = pcall(function()
+                result = HttpService:JSONDecode(response.Body)
+            end)
+
+            if ok and result then
+    if result.success then
+        statusLabel:Set("✅ " .. (result.message or "Key hợp lệ!"))
+        -- load script chính
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/najsjsksk/Kkk/refs/heads/main/nah172gs.txt"))()
         end)
-
-        if success then
-            local result = HttpService:JSONDecode(response)
-            if result.success then
-                ResultLabel:Set("✅ " .. result.message)
-              loadstring(game:HttpGet("https://raw.githubusercontent.com/najsjsksk/Kkk/refs/heads/main/nah172gs.txt"))()
-            else
-                ResultLabel:Set("❌ " .. result.message)
-            end
+        -- Xoá GUI key system sau 1s
+        task.delay(1, function()
+            OrionLib:Destroy()
+        end)
+    else
+        statusLabel:Set("❌ " .. (result.message or "Key không hợp lệ."))
+    end
+else
+    statusLabel:Set("❌ Phản hồi API không hợp lệ.")
+end
         else
-            ResultLabel:Set("❌ lỗi hay báo _duyvel")
+            statusLabel:Set("❌ Lỗi HTTP: " .. tostring(response.StatusCode))
         end
     end
 })
 
+-- // Nút lấy key (copy link)
 Tab:AddButton({
-    Title = "🌐 Lấy Key",
-    Description = "Mở trình duyệt để lấy key",
+    Name = "🌐 Lấy Key",
     Callback = function()
         setclipboard("https://duyvel.testhubgetkey.site/")
-        Fluent:Notify({
-            Title = "Đã sao chép link!",
-            Content = "Vui lòng dán vào trình duyệt",
-            SubContent = "https://duyvel.testhubgetkey.site/",
-            Duration = 5
+        OrionLib:MakeNotification({
+            Name = "🔗 Đã sao chép link",
+            Content = "Mở trình duyệt và dán: https://duyvel.testhubgetkey.site/",
+            Time = 5
         })
     end
 })
