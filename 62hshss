@@ -1,0 +1,89 @@
+-- // Tải thư viện Fluent
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+-- // Tạo cửa sổ chính
+local Window = Fluent:CreateWindow({
+    Title = "Renx Hub | Key System",
+    SubTitle = "by _duyvel",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(500, 350),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.RightControl
+})
+
+-- // Tạo tab chính
+local Tab = Window:AddTab({ Title = "Key System", Icon = "key" })
+
+-- // Dịch vụ cần thiết
+local HttpService = game:GetService("HttpService")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+
+-- // Lấy HWID từ ClientId
+local function getHWID()
+    local success, result = pcall(function()
+        return RbxAnalyticsService:GetClientId()
+    end)
+    return success and result or "unknown"
+end
+local KEY_API = "https://duyvel.testhubgetkey.site/checkkey" -- THAY LINK NÀY BẰNG API CỦA BẠN
+local userKey = ""
+
+-- // Ô nhập Key
+Tab:AddInput("KeyInput", {
+    Title = "🔑 Nhập Key",
+    Placeholder = "Key",
+    Callback = function(value)
+        userKey = value
+    end
+})
+
+-- // Kết quả phản hồi
+local ResultLabel = Tab:AddParagraph("Trạng thái", "Chưa kiểm tra...")
+
+-- // Nút CheckKey
+Tab:AddButton({
+    Title = "✅ Check Key",
+    Description = "Kiểm tra và gán key nếu hợp lệ.",
+    Callback = function()
+        if userKey == "" then
+            ResultLabel:Set("❗ Vui lòng nhập key trước.")
+            return
+        end
+
+        ResultLabel:Set("🔄 Đang kiểm tra...")
+
+        local hwid = getHWID()
+        local payload = HttpService:JSONEncode({ key = userKey, hwid = hwid })
+
+        local success, response = pcall(function()
+            return HttpService:PostAsync(KEY_API, payload, Enum.HttpContentType.ApplicationJson)
+        end)
+
+        if success then
+            local result = HttpService:JSONDecode(response)
+            if result.success then
+                ResultLabel:Set("✅ " .. result.message)
+              loadstring(game:HttpGet("https://raw.githubusercontent.com/najsjsksk/Kkk/refs/heads/main/nah172gs.txt"))()
+            else
+                ResultLabel:Set("❌ " .. result.message)
+            end
+        else
+            ResultLabel:Set("❌ lỗi hay báo _duyvel")
+        end
+    end
+})
+
+Tab:AddButton({
+    Title = "🌐 Lấy Key",
+    Description = "Mở trình duyệt để lấy key",
+    Callback = function()
+        setclipboard("https://duyvel.testhubgetkey.site/")
+        Fluent:Notify({
+            Title = "Đã sao chép link!",
+            Content = "Vui lòng dán vào trình duyệt",
+            SubContent = "https://duyvel.testhubgetkey.site/",
+            Duration = 5
+        })
+    end
+})
