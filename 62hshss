@@ -38,8 +38,6 @@ Tab:AddInput("KeyInput", {
     end
 })
 
--- // Kết quả phản hồi
-local ResultLabel = Tab:AddParagraph("Trạng thái", "Chưa kiểm tra...")
 
 -- // Nút CheckKey
 Tab:AddButton({
