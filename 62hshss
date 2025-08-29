@@ -98,7 +98,7 @@ Tab:AddButton({
         statusLabel:Set("✅ " .. (result.message or "Key hợp lệ!"))
         -- load script chính
         pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/najsjsksk/Kkk/refs/heads/main/nah172gs.txt"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/najsjsksk/Kkk/refs/heads/main/Soucre.txt"))()
         end)
         -- Xoá GUI key system sau 1s
         task.delay(1, function()
